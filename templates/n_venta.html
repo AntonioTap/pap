@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Cajero</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin/css/normalize.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin/css/sweetalert2.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin/css/material.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin/css/material-design-iconic-font.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin/css/jquery.mCustomScrollbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin/css/main.css') }}">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="{{ url_for("static", filename="admin/js/jquery-1.11.2.min.js") }}"><\/script>')</script>
+    <script src="{{ url_for('static', filename='admin/js/material.min.js') }}" ></script>
+    <script src="{{ url_for('static', filename='admin/js/sweetalert2.min.js') }}" ></script>
+    <script src="{{ url_for('static', filename='admin/js/jquery.mCustomScrollbar.concat.min.js') }}" ></script>
+    <script src="{{ url_for('static', filename='admin/js/main.js') }}" ></script>
+	<script>
+        $(document).ready(function() {
+            // Función para buscar productos y mostrar el menú desplegable
+            $('#product-search').keyup(function() {
+                var searchTerm = $(this).val();
+                // Realizar una petición AJAX para buscar productos que coincidan con el término de búsqueda
+                // y mostrar los resultados en el menú desplegable
+                $.ajax({
+                    url: '/search',
+                    method: 'POST',
+                    data: {searchTerm: searchTerm},
+                    success: function(response) {
+                        $('#product-menu').html(response);
+                    }
+                });
+            });
+        });
+
+        // Función para agregar un producto al carrito
+        function addToCart() {
+            var product = $('#selected-product').val();
+            var quantity = $('#quantity').val();
+            // Realizar una petición AJAX para agregar el producto al carrito
+            // y actualizar la lista de productos en la página
+            $.ajax({
+                url: '/add_to_cart',
+                method: 'POST',
+                data: {product: product, quantity: quantity},
+                success: function(response) {
+                    $('#cart-items').html(response);
+                }
+            });
+        }
+
+        // Función para generar la venta (generar el ticket)
+        function generateSale() {
+            // Realizar una petición AJAX para generar el ticket de venta
+            $.ajax({
+                url: '/generate_sale',
+                method: 'POST',
+                success: function(response) {
+                    // Mostrar el ticket en una ventana emergente o redirigir a otra página
+                    alert('Venta generada:\n' + response);
+                    // Limpiar el carrito y la lista de productos agregados
+                    $('#cart-items').html('');
+                    $('#total-price').html('0');
+                }
+            });
+        }
+
+        // Función para cancelar la venta (borrar todos los productos agregados)
+        function cancelSale() {
+            // Limpiar el carrito y la lista de productos agregados
+            $('#cart-items').html('');
+            $('#total-price').html('0');
+        }
+    </script>
+</head>
+
+<style>
+/* Reset de estilos */
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+/* Estilos generales */
+body {
+	font-family: Arial, sans-serif;
+	background-color: #f7f7f7;
+	color: #000; /* Texto en negro */
+}
+
+.container {
+	max-width: 600px;
+	margin: 0 auto;
+	padding: 20px;
+	background-color: #fff;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	border-radius: 5px;
+}
+
+.center-text {
+	text-align: center;
+	margin-bottom: 15px; /* Espacio extra debajo del título */
+}
+
+.product-search,
+.product-selection,
+.quantity-input {
+	margin-bottom: 10px;
+}
+
+.product-search input,
+.product-selection select,
+.quantity-input input {
+	width: 100%;
+	padding: 10px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+}
+
+.add-button,
+.generate-button,
+.cancel-button {
+	display: block;
+	width: 100%;
+	padding: 10px;
+	color: #1a1919;
+	background-color: #c7d6e6;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	margin-top: 10px; /* Espacio arriba de los botones */
+	transition: background-color 0.3s ease;
+}
+
+.add-button:hover,
+.generate-button:hover,
+.cancel-button:hover {
+	background-color: #cedceb;
+}
+
+.total-price {
+	margin-top: 15px; /* Espacio arriba del total */
+	font-weight: bold;
+}
+
+.buttons {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 20px;
+}
+
+</style>	
+
+</head>
+<body>
+	<!-- Notifications area -->
+	<section class="full-width container-notifications">
+		<div class="full-width container-notifications-bg btn-Notification"></div>
+		<section class="NotificationArea">
+			<div class="full-width text-center NotificationArea-title tittles">Notifications <i class="zmdi zmdi-close btn-Notification"></i></div>
+			<a href="#" class="Notification" id="notifation-unread-1">
+				<div class="Notification-icon"><i class="zmdi zmdi-accounts-alt bg-info"></i></div>
+				<div class="Notification-text">
+					<p>
+						<i class="zmdi zmdi-circle"></i>
+						<strong>New User Registration</strong> 
+						<br>
+						<small>Just Now</small>
+					</p>
+				</div>
+				<div class="mdl-tooltip mdl-tooltip--left" for="notifation-unread-1">Notification as UnRead</div> 
+			</a>
+
+		</section>
+	</section>
+	<!-- navLateral -->
+	<section class="full-width navLateral">
+		<div class="full-width navLateral-bg btn-menu"></div>
+		<div class="full-width navLateral-body">
+			<div class="full-width navLateral-body-logo text-center tittles">
+				<i class="zmdi zmdi-close btn-menu"></i> ANDYLU 
+			</div>
+			<figure class="full-width navLateral-body-tittle-menu">
+				<div>
+					<img src="{{url_for('static', filename='admin/assets/img/avatar-male.png')}}" alt="Avatar" class="img-responsive">
+				</div>
+				<figcaption>
+					<span>
+						AnS<br>
+						<small>Cajero</small>
+					</span>
+				</figcaption>
+			</figure>
+			<nav class="full-width">
+				<ul class="full-width list-unstyle menu-principal">
+					<li class="full-width">
+						<a href="/cajero" class="full-width">
+							<div class="navLateral-body-cl">
+								<i class="zmdi zmdi-view-dashboard"></i>
+							</div>
+							<div class="navLateral-body-cr">
+								Inicio
+							</div>
+						</a>
+					</li>
+
+					<li class="full-width divider-menu-h"></li>
+					<li class="full-width">
+						<a href="" class="full-width">
+							<div class="navLateral-body-cl">
+								<i class="zmdi zmdi-shopping-cart"></i>
+							</div>
+							<div class="navLateral-body-cr">
+								Vender 
+							</div>
+						</a>
+						<li class="full-width divider-menu-h"></li>
+						<li class="full-width">
+							<a href="/Nueva_cotizar" class="full-width">
+								<div class="navLateral-body-cl">
+									<i class="zmdi zmdi-money-box"></i>
+								</div>
+								<div class="navLateral-body-cr">
+									Cotizar
+								</div>
+							</a>
+						</li>
+						<li class="full-width divider-menu-h"></li>
+						<li class="full-width">
+							<a href="/inventario" class="full-width">
+								<div class="navLateral-body-cl">
+									<i class="zmdi zmdi-store"></i>
+								</div>
+								<div class="navLateral-body-cr">
+									Inventario
+								</div>
+							</a>
+						</li>
+						<li class="full-width divider-menu-h"></li>
+						<li class="full-width">
+							<a href="/help" class="full-width">
+								<div class="navLateral-body-cl">
+									<i class="zmdi zmdi-wrench"></i>
+								</div>
+								<div class="navLateral-body-cr">
+									Ayuda
+								</div>
+							</a>
+						</li>
+				</ul>
+			</nav>
+		</div>
+	</section>
+	<!-- pageContent -->
+	<section class="full-width pageContent">
+		<!-- navBar -->
+		<div class="full-width navBar">
+			<div class="full-width navBar-options">
+				<i class="zmdi zmdi-swap btn-menu" id="btn-menu"></i>	
+				<div class="mdl-tooltip" for="btn-menu">Hide / Show MENU</div>
+				<nav class="navBar-options-list">
+					<ul class="list-unstyle">
+						<li class="btn-Notification" id="notifications">
+							<i class="zmdi zmdi-notifications"></i>
+							<div class="mdl-tooltip" for="notifications">Notificaciones</div>
+						</li>
+						<li class="btn-exit" id="btn-exit">
+							<i class="zmdi zmdi-power"></i>
+							<div class="mdl-tooltip" for="btn-exit">Salir</div>
+						</li>
+						<li class="text-condensedLight noLink" ><small>AnS</small></li>
+						<li class="noLink">
+							<figure>
+								<img src="{{url_for('static', filename='admin/assets/img/avatar-male.png')}}" alt="Avatar" class="img-responsive">
+							</figure>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</div>
+        <section class="full-width header-well">
+			<div class="container">
+				<h1 class="center-text">Venta de Productos</h1>
+				
+				
+		<div class="product-search">
+					
+					
+		<input type="text" id="product-search" placeholder="Buscar producto...">
+					<div id="product-menu"></div>
+				
+				</
+		</div>
+				<div class="product-selection">
+					<label for="selected-product">Producto:</label>
+					<select id="selected-product">
+						<!-- Opciones del menú desplegable -->
+					</select>
+				</div>
+				<div class="quantity-input">
+					
+					
+		<label for="quantity">Cantidad:</label>
+					
+				
+		<input type="number" id="quantity" min="1" value="1">
+				</div>
+				
+			
+		<button class="add-button" onclick="addToCart()">Agregar</button>
+				<h2 class="center-text">Carrito de Compras</h2>
+				
+				
+		
+			
+		<div class="table-container">
+					<table class="mdl-data-table mdl-js-data-table mdl-shadow--2dp full-width table-responsive">
+						<thead>
+							<tr>
+								<th class="mdl-data-table__cell--non-numeric">Producto</th>
+								
+								
+		
+							
+		<th>Cantidad</th>
+								<th>SubPrecio</th>
+								<th>PrecioTotal</th>
+							</tr>
+						</thead>
+						
+						
+		<tbody id="cart-items">
+							<!-- Aquí se mostrarán los productos agregados -->
+						</tbody>
+					
+				
+		</table>
+				
+				</
+		</div>
+				<h3 class="total-price">Total: $<span id="total-price">0</span></h3>
+				<div class="buttons">
+					<button class="generate-button" onclick="generateSale()">Generar Venta</button>
+					
+					
+		<button class="cancel-button" onclick="cancelSale()">Cancelar</button>
+				</div>
+			
+			
+		</div>
+		</section>
+	</section>
+
+</body>
+</html>
